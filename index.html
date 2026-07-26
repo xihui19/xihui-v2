@@ -1039,11 +1039,12 @@ function speakText(text, btn) {
   var u = new SpeechSynthesisUtterance(text);
   u.lang = 'en-US';
   u.rate = 0.85;
-  if (btn) {
+  if (btn && btn.textContent) {
+    var origText = btn.textContent;
     btn.style.color = '#2E7D32';
     btn.textContent = '🔊 播放中...';
-    u.onend = function() { btn.style.color = '#43A047'; btn.textContent = '🔊 听发音'; };
-    u.onerror = function() { btn.style.color = '#43A047'; btn.textContent = '🔊 听发音'; };
+    u.onend = function() { btn.style.color = '#43A047'; btn.textContent = origText; };
+    u.onerror = function() { btn.style.color = '#43A047'; btn.textContent = origText; };
   }
   window.speechSynthesis.speak(u);
 }
@@ -1063,7 +1064,7 @@ function renderStudy() {
   for (var i=0; i<ieltsSent.length; i++) {
     var sid = 'is_'+i;
     html += '<div class="ielts-sentence">';
-    html += '<div class="en">'+(i+1)+'. '+escapeHtml(ieltsSent[i].en)+' <button class="speak-btn" onclick="speakText(''+escapeHtml(ieltsSent[i].en.replace(/'/g,"\'"))+'',this)" id="'+sid+'" title="听发音">🔊 听发音</button></div>';
+    html += '<div class="en">'+(i+1)+'. '+escapeHtml(ieltsSent[i].en)+' <button class="speak-btn" onclick="speakText(this.dataset.text,this)" data-text="'+escapeHtml(ieltsSent[i].en)+'" id="'+sid+'" title="听发音">🔊 听发音</button></div>';
     html += '<div class="zh">'+escapeHtml(ieltsSent[i].zh)+'</div>';
     html += '</div>';
   }
@@ -1074,7 +1075,7 @@ function renderStudy() {
   html += '<div style="display:flex; flex-wrap:wrap;">';
   for (var i=0; i<ieltsWrd.length; i++) {
     var wid = 'iw_'+i;
-    html += '<div class="ielts-word" style="cursor:pointer;position:relative;" onclick="speakText(''+escapeHtml(ieltsWrd[i].word.replace(/'/g,"\'"))+'',document.getElementById(''+wid+''))">';
+    html += '<div class="ielts-word" style="cursor:pointer;position:relative;" data-word="'+escapeHtml(ieltsWrd[i].word)+'" onclick="speakText(this.dataset.word,null)">';
     html += '<span class="word" style="color:#43A047;">'+escapeHtml(ieltsWrd[i].word)+'</span><span class="pos">'+escapeHtml(ieltsWrd[i].pos)+'</span>';
     html += '<span class="meaning">'+escapeHtml(ieltsWrd[i].meaning)+'</span>';
     html += '<span id="'+wid+'" style="position:absolute;top:4px;right:8px;font-size:14px;color:#43A047;pointer-events:none;">🔊</span>';
@@ -1087,7 +1088,7 @@ function renderStudy() {
   for (var i=0; i<dailySent.length; i++) {
     var did = 'ds_'+i;
     html += '<div class="ielts-sentence">';
-    html += '<div class="en">'+(i+1)+'. '+escapeHtml(dailySent[i].en)+' <button class="speak-btn" onclick="speakText(''+escapeHtml(dailySent[i].en.replace(/'/g,"\'"))+'',this)" id="'+did+'" title="听发音">🔊 听发音</button></div>';
+    html += '<div class="en">'+(i+1)+'. '+escapeHtml(dailySent[i].en)+' <button class="speak-btn" onclick="speakText(this.dataset.text,this)" data-text="'+escapeHtml(dailySent[i].en)+'" id="'+did+'" title="听发音">🔊 听发音</button></div>';
     html += '<div class="zh">'+escapeHtml(dailySent[i].zh)+'</div>';
     html += '</div>';
   }
@@ -1098,7 +1099,7 @@ function renderStudy() {
   html += '<div style="display:flex; flex-wrap:wrap;">';
   for (var i=0; i<dailyWrd.length; i++) {
     var dwid = 'dw_'+i;
-    html += '<div class="ielts-word" style="cursor:pointer;position:relative;" onclick="speakText(''+escapeHtml(dailyWrd[i].word.replace(/'/g,"\'"))+'',document.getElementById(''+dwid+''))">';
+    html += '<div class="ielts-word" style="cursor:pointer;position:relative;" data-word="'+escapeHtml(dailyWrd[i].word)+'" onclick="speakText(this.dataset.word,null)">';
     html += '<span class="word" style="color:#43A047;">'+escapeHtml(dailyWrd[i].word)+'</span><span class="pos">'+escapeHtml(dailyWrd[i].pos)+'</span>';
     html += '<span class="meaning">'+escapeHtml(dailyWrd[i].meaning)+'</span>';
     html += '<span id="'+dwid+'" style="position:absolute;top:4px;right:8px;font-size:14px;color:#43A047;pointer-events:none;">🔊</span>';
