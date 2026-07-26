@@ -978,12 +978,19 @@ function renderStudy() {
   var podcasts = shuffle(podcastList).slice(0,10);
   html += '<div class="card"><div class="card-title">🎧 今日热门播客（10档）</div>';
   for (var i=0; i<podcasts.length; i++) {
+    var q = encodeURIComponent(podcasts[i].title);
+    var xyzLink = 'https://www.xiaoyuzhoufm.com/search?q='+q;
+    var appleLink = 'https://podcasts.apple.com/search?term='+q;
     html += '<div class="ielts-sentence">';
-    html += '<div class="en">'+(i+1)+'. '+podcasts[i].title+'</div>';
+    html += '<div class="en"><a href="'+xyzLink+'" target="_blank" style="color:#43A047;text-decoration:none;">🎧 '+(i+1)+'. '+podcasts[i].title+'</a></div>';
     html += '<div class="zh">'+podcasts[i].desc+'</div>';
+    html += '<div style="margin-top:4px;display:flex;gap:6px;">';
+    html += '<a href="'+xyzLink+'" target="_blank" style="font-size:11px;color:#43A047;text-decoration:none;background:#E8F5E9;padding:2px 8px;border-radius:10px;">▶ 小宇宙收听</a>';
+    html += '<a href="'+appleLink+'" target="_blank" style="font-size:11px;color:#666;text-decoration:none;background:#f5f5f5;padding:2px 8px;border-radius:10px;">Apple播客</a>';
+    html += '</div>';
     html += '</div>';
   }
-  html += '<p style="font-size:11px;color:#999;margin-top:8px;">* 数据来源：苹果播客/小宇宙热门排行</p>';
+  html += '<p style="font-size:11px;color:#999;margin-top:8px;">* 点击播客名或按钮即可跳转收听</p>';
   html += '</div>';
 
   document.getElementById("page-study").innerHTML = html;
