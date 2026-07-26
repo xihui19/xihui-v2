@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>希慧</title>
+<meta name="apple-mobile-web-app-title" content="希慧">
+<meta name="theme-color" content="#00897B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="manifest" href="manifest.json">
+<style>
+:root {
+  --primary: #00897B;
+  --primary-light: #26A69A;
+  --primary-dark: #00695C;
+  --bg: #E0F2F1;
+  --card: #ffffff;
+  --text: #004D40;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  height:100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+/* Layout */
+.app { display:flex; height:100vh; overflow:hidden; }
+.sidebar {
+  width: 200px;
+  background: var(--primary-dark);
+  display:flex; flex-direction:column;
+  flex-shrink:0;
+  transition: width 0.3s ease;
+  overflow:hidden;
+  z-index: 100;
+}
+.sidebar.collapsed { width: 56px; }
+.sidebar-header {
+  height: 56px;
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:20px; font-weight:bold;
+  flex-shrink:0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  white-space:nowrap;
+}
+.sidebar.collapsed .sidebar-header .title-text { display:none; }
+.sidebar-header .toggle-btn {
+  cursor:pointer; font-size:18px; margin-left:8px;
+  opacity:0.7; transition: opacity 0.2s;
+}
+.sidebar-header .toggle-btn:hover { opacity:1; }
+.nav-list {
+  flex:1; overflow-y:auto;
+  padding: 8px 0;
+}
+.nav-item {
+  display:flex; align-items:center;
+  padding: 12px 20px;
+  cursor:pointer;
+  color: rgba(255,255,255,0.7);
+  transition: all 0.2s;
+  white-space:nowrap;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { background: rgba(255,255,255,0.1); color:#fff; }
+.nav-item.active {
+  background: rgba(255,255,255,0.15);
+  color:#fff;
+  border-left-color: var(--primary-light);
+}
+.nav-item .icon { font-size:20px; flex-shrink:0; width:24px; text-align:center; }
+.nav-item .label { margin-left:12px; font-size:14px; }
+.sidebar.collapsed .nav-item { padding:12px 16px; justify-content:center; }
+.sidebar.collapsed .nav-item .label { display:none; }
+
+.main { flex:1; overflow-y:auto; position:relative; }
+.content { padding: 20px; max-width: 900px; margin: 0 auto; }
+
+/* Mobile sidebar overlay */
+.sidebar-overlay {
+  display:none;
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.4);
+  z-index: 99;
+}
+.sidebar-overlay.show { display:block; }
+
+/* Page */
+.page { display:none; }
+.page.active { display:block; }
+
+/* Cards */
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.card-title {
+  font-size: 16px; font-weight:bold;
+  color: var(--primary-dark);
+  margin-bottom: 12px;
+  display:flex; align-items:center; gap:8px;
+}
+
+/* Home */
+.home-date { font-size:28px; font-weight:bold; color:var(--primary-dark); }
+.home-time { font-size:42px; font-weight:300; color:var(--primary); margin:8px 0; }
+.home-quote {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color:#fff; border-radius:12px; padding:24px; margin:16px 0;
+  font-size:16px; line-height:1.8;
+}
+.home-quote .source { font-size:13px; opacity:0.8; margin-top:8px; }
+.home-stats { display:flex; gap:12px; margin-top:16px; flex-wrap:wrap; }
+.stat-card {
+  background:var(--card); border-radius:12px; padding:16px;
+  flex:1; min-width:140px; text-align:center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.stat-card .num { font-size:32px; font-weight:bold; color:var(--primary); }
+.stat-card .label { font-size:13px; color:#666; margin-top:4px; }
+
+/* News */
+.news-section { margin-bottom:24px; }
+.news-section h3 {
+  font-size:16px; color:var(--primary-dark);
+  margin-bottom:10px; padding-bottom:6px;
+  border-bottom:2px solid var(--primary-light);
+}
+.news-item {
+  display:flex; align-items:flex-start;
+  padding:8px 4px;
+  border-bottom:1px solid #f0f0f0;
+  gap:8px;
+}
+.news-rank {
+  min-width:24px; height:24px; border-radius:4px;
+  background:var(--primary); color:#fff;
+  font-size:12px; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.news-rank.top3 { background:var(--primary-dark); }
+.news-title {
+  font-size:14px; color:var(--text); cursor:pointer;
+  text-decoration:none; flex:1; line-height:1.5;
+}
+.news-title:hover { color:var(--primary); }
+.news-hot { font-size:12px; color:#999; flex-shrink:0; }
+.news-loading { text-align:center; padding:20px; color:#999; }
+.news-update-time { font-size:12px; color:#999; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.refresh-btn {
+  background:var(--primary); color:#fff; border:none;
+  padding:4px 12px; border-radius:6px; cursor:pointer; font-size:12px;
+}
+.refresh-btn:hover { background:var(--primary-dark); }
+
+/* Todo */
+.todo-item {
+  display:flex; align-items:flex-start; gap:8px;
+  padding:12px; background:var(--card); border-radius:8px;
+  margin-bottom:8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.todo-checkbox {
+  width:22px; height:22px; border:2px solid var(--primary);
+  border-radius:4px; cursor:pointer; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  margin-top:2px;
+}
+.todo-checkbox.checked { background:var(--primary); color:#fff; }
+.todo-checkbox.checked::after { content:'✓'; font-size:14px; }
+.todo-content { flex:1; }
+.todo-content.done { opacity:0.5; text-decoration:line-through; }
+.todo-text { font-size:14px; line-height:1.5; word-break:break-word; }
+.todo-images { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.todo-images img { width:80px; height:80px; object-fit:cover; border-radius:6px; }
+.todo-video { margin-top:8px; }
+.todo-video iframe { width:100%; max-width:400px; height:225px; border:none; border-radius:8px; }
+.todo-actions { display:flex; gap:6px; flex-shrink:0; }
+.todo-actions button {
+  background:none; border:none; cursor:pointer;
+  font-size:16px; padding:4px;
+}
+.todo-link { font-size:13px; color:var(--primary); margin-top:4px; }
+.todo-link a { color:var(--primary); }
+
+/* IELTS */
+.ielts-sentence {
+  background:var(--card); border-radius:8px; padding:12px;
+  margin-bottom:8px; border-left:3px solid var(--primary-light);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.ielts-sentence .en { font-size:14px; font-weight:500; margin-bottom:4px; }
+.ielts-sentence .zh { font-size:13px; color:#666; }
+.ielts-word {
+  display:inline-block; background:var(--card); border-radius:8px;
+  padding:10px 14px; margin:4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  min-width:200px;
+}
+.ielts-word .word { font-weight:bold; color:var(--primary-dark); }
+.ielts-word .pos { font-size:12px; color:var(--primary); font-style:italic; margin-left:6px; }
+.ielts-word .meaning { font-size:13px; color:#555; display:block; margin-top:4px; }
+
+/* Industry */
+.industry-card {
+  background:var(--card); border-radius:12px; padding:16px;
+  margin-bottom:16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.industry-card h3 { color:var(--primary-dark); margin-bottom:12px; font-size:16px; }
+.industry-item { padding:8px 0; border-bottom:1px solid #f0f0f0; font-size:14px; line-height:1.6; }
+.industry-item:last-child { border-bottom:none; }
+.industry-tag { font-size:11px; color:var(--primary); background:var(--bg); padding:2px 8px; border-radius:4px; }
+
+/* Mood */
+.mood-buttons { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+.mood-btn {
+  background:var(--card); border:2px solid transparent;
+  border-radius:12px; padding:12px 16px; cursor:pointer;
+  font-size:24px; text-align:center;
+  transition: all 0.2s;
+}
+.mood-btn:hover { transform:scale(1.05); }
+.mood-btn.selected { border-color:var(--primary); background:var(--bg); }
+.mood-btn .label { display:block; font-size:11px; color:#666; margin-top:4px; }
+.mood-history-item {
+  display:flex; align-items:center; gap:12px;
+  padding:12px; background:var(--card); border-radius:8px;
+  margin-bottom:8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.mood-history-item .emoji { font-size:28px; }
+.mood-history-item .info { flex:1; }
+.mood-history-item .date { font-size:13px; color:#999; }
+.mood-history-item .desc { font-size:14px; margin-top:4px; }
+.mood-color-bar { width:4px; height:40px; border-radius:2px; flex-shrink:0; }
+
+/* Calendar */
+.calendar { max-width:600px; margin:0 auto; }
+.calendar-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:16px;
+}
+.calendar-header button {
+  background:var(--primary); color:#fff; border:none;
+  width:36px; height:36px; border-radius:6px; cursor:pointer; font-size:18px;
+}
+.calendar-header .month { font-size:18px; font-weight:bold; color:var(--primary-dark); }
+.calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.calendar-day-header {
+  text-align:center; padding:8px 0; font-size:13px;
+  font-weight:bold; color:var(--primary);
+}
+.calendar-day {
+  aspect-ratio:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  border-radius:8px; cursor:pointer; font-size:14px;
+  position:relative;
+  transition: background 0.2s;
+}
+.calendar-day:hover { background:var(--bg); }
+.calendar-day.today { background:var(--primary); color:#fff; }
+.calendar-day.selected { background:var(--primary-light); color:#fff; }
+.calendar-day.other-month { color:#ccc; }
+.calendar-day .dot {
+  width:5px; height:5px; border-radius:50%;
+  background:var(--primary); margin-top:2px;
+}
+.calendar-day.today .dot { background:#fff; }
+.calendar-day .reminder-dot { background:#f44336; }
+.calendar-day-info {
+  margin-top:16px; background:var(--card); border-radius:12px;
+  padding:16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.calendar-day-info h4 { color:var(--primary-dark); margin-bottom:10px; }
+
+/* Modal */
+.modal-overlay {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,0.5);
+  display:none; z-index:200;
+  align-items:flex-end; justify-content:center;
+}
+.modal-overlay.show { display:flex; }
+.modal {
+  background:var(--card); border-radius:16px 16px 0 0;
+  width:100%; max-width:600px;
+  max-height:85vh; overflow-y:auto;
+  padding:20px;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+.modal-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:16px;
+}
+.modal-header h3 { color:var(--primary-dark); font-size:18px; }
+.modal-close { background:none; border:none; font-size:24px; cursor:pointer; color:#999; }
+.modal label { font-size:13px; color:#666; display:block; margin-bottom:6px; margin-top:12px; }
+.modal select, .modal textarea, .modal input {
+  width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;
+  font-size:14px; font-family:inherit;
+}
+.modal textarea { resize:vertical; min-height:80px; }
+.modal input:focus, .modal textarea:focus, .modal select:focus {
+  outline:none; border-color:var(--primary);
+}
+.image-preview { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.image-preview img { width:70px; height:70px; object-fit:cover; border-radius:6px; }
+.image-preview .remove-img {
+  position:relative; display:inline-block;
+}
+.image-preview .remove-img button {
+  position:absolute; top:-4px; right:-4px;
+  background:#f44336; color:#fff; border:none;
+  width:20px; height:20px; border-radius:50%; cursor:pointer;
+  font-size:12px; display:flex; align-items:center; justify-content:center;
+}
+.btn {
+  background:var(--primary); color:#fff; border:none;
+  padding:10px 20px; border-radius:8px; cursor:pointer;
+  font-size:14px; margin-top:12px;
+}
+.btn:hover { background:var(--primary-dark); }
+.btn-full { width:100%; }
+.btn-outline {
+  background:transparent; border:1px solid var(--primary);
+  color:var(--primary);
+}
+.fab {
+  position:fixed; bottom:24px; right:24px;
+  width:56px; height:56px; border-radius:50%;
+  background:var(--primary); color:#fff; border:none;
+  font-size:28px; cursor:pointer;
+  box-shadow: 0 4px 12px rgba(0,137,123,0.4);
+  z-index:50;
+  display:flex; align-items:center; justify-content:center;
+  transition: transform 0.2s;
+}
+.fab:hover { transform:scale(1.1); }
+
+/* Reminder popup */
+.reminder-popup {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,0.6);
+  display:none; z-index:300;
+  align-items:center; justify-content:center;
+  padding:20px;
+}
+.reminder-popup.show { display:flex; }
+.reminder-content {
+  background:var(--card); border-radius:16px;
+  padding:24px; max-width:400px; width:100%;
+  max-height:80vh; overflow-y:auto;
+}
+.reminder-content h3 { color:var(--primary-dark); margin-bottom:16px; }
+.reminder-item {
+  padding:12px; background:var(--bg); border-radius:8px;
+  margin-bottom:8px;
+}
+.reminder-item .date { font-size:12px; color:var(--primary); font-weight:bold; }
+.reminder-item .title { font-size:14px; margin-top:4px; }
+
+.empty-state {
+  text-align:center; padding:40px 20px; color:#999;
+  font-size:14px;
+}
+
+/* Entry display */
+.entry-item {
+  background:var(--card); border-radius:12px; padding:16px;
+  margin-bottom:12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.entry-item .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.entry-item .date { font-size:12px; color:#999; }
+.entry-item .text { font-size:14px; line-height:1.6; word-break:break-word; }
+.entry-item .images { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.entry-item .images img { width:100px; height:100px; object-fit:cover; border-radius:8px; cursor:pointer; }
+.entry-item .video iframe { width:100%; height:200px; border:none; border-radius:8px; margin-top:8px; }
+.entry-item .link { margin-top:8px; }
+.entry-item .link a { color:var(--primary); font-size:13px; }
+.entry-item .actions { display:flex; gap:8px; }
+.entry-item .actions button { background:none; border:none; cursor:pointer; font-size:16px; padding:4px; }
+.entry-item .mood-emoji { font-size:28px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { width: 56px; }
+  .sidebar .nav-item .label { display:none; }
+  .sidebar .nav-item { padding:12px 16px; justify-content:center; }
+  .sidebar.expanded { width: 200px; }
+  .sidebar.expanded .nav-item .label { display:inline; }
+  .sidebar.expanded .nav-item { padding:12px 20px; justify-content:flex-start; }
+  .sidebar-header .title-text { display:none; }
+  .sidebar.expanded .sidebar-header .title-text { display:inline; }
+  .content { padding: 16px; }
+  .home-time { font-size:32px; }
+  .home-date { font-size:22px; }
+  .fab { bottom:16px; right:16px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="title-text">希慧</span>
+      <span class="toggle-btn" id="toggleBtn" onclick="toggleSidebar()">☰</span>
+    </div>
+    <div class="nav-list" id="navList"></div>
+  </div>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebarMobile()"></div>
+
+  <div class="main">
+    <div class="content">
+      <div class="page active" id="page-home"></div>
+      <div class="page" id="page-news"></div>
+      <div class="page" id="page-todo"></div>
+      <div class="page" id="page-study"></div>
+      <div class="page" id="page-industry"></div>
+      <div class="page" id="page-success"></div>
+      <div class="page" id="page-memo"></div>
+      <div class="page" id="page-mood"></div>
+      <div class="page" id="page-calendar"></div>
+    </div>
+    <button class="fab" onclick="openModal()">+</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>添加内容</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <label>类型</label>
+    <select id="modalType">
+      <option value="todo">今日计划</option>
+      <option value="success">成功日记</option>
+      <option value="memo">备忘录</option>
+      <option value="mood">心情记录</option>
+      <option value="reminder">提醒</option>
+    </select>
+    <label>内容</label>
+    <textarea id="modalContent" placeholder="输入内容..."></textarea>
+    <div id="moodSelector" style="display:none; margin-top:12px;">
+      <label>心情</label>
+      <div class="mood-buttons" id="modalMoodBtns"></div>
+    </div>
+    <div id="reminderDate" style="display:none; margin-top:12px;">
+      <label>提醒日期</label>
+      <input type="date" id="modalReminderDate">
+    </div>
+    <label>链接（可选）</label>
+    <input type="url" id="modalLink" placeholder="https://...">
+    <label>视频链接（支持B站/YouTube）</label>
+    <input type="url" id="modalVideo" placeholder="https://...">
+    <label>图片（最多9张）</label>
+    <input type="file" id="modalImages" accept="image/*" multiple>
+    <div class="image-preview" id="imagePreview"></div>
+    <button class="btn btn-full" onclick="saveModalData()">保存</button>
+  </div>
+</div>
+
+<!-- Reminder Popup -->
+<div class="reminder-popup" id="reminderPopup">
+  <div class="reminder-content">
+    <h3>📅 提醒事项</h3>
+    <div id="reminderList"></div>
+    <button class="btn btn-full" onclick="closeReminderPopup()">知道了</button>
+  </div>
+</div>
+
+<script>
+// ===================== DATA =====================
+
+var maoQuotes = [
+  "星星之火，可以燎原。 — 《星星之火，可以燎原》",
+  "一切反动派都是纸老虎。 — 《和美国记者安娜·路易斯·斯特朗的谈话》",
+  "为人民服务。 — 《为人民服务》",
+  "多少事，从来急；天地转，光阴迫。一万年太久，只争朝夕。 — 《满江红·和郭沫若同志》",
+  "世上无难事，只要肯登攀。 — 《水调歌头·重上井冈山》",
+  "红军不怕远征难，万水千山只等闲。 — 《七律·长征》",
+  "没有调查，没有发言权。 — 《反对本本主义》",
+  "实践是检验真理的唯一标准。 — 《实践论》",
+  "矛盾是事物发展的根本动力。 — 《矛盾论》",
+  "认清形势，区分敌友，这是革命的首要问题。 — 《中国社会各阶级的分析》",
+  "枪杆子里面出政权。 — 《战争和战略问题》",
+  "政策和策略是党的生命。 — 《关于情况的通报》",
+  "帝国主义和一切反动派都是纸老虎。 — 《和美国记者安娜·路易斯·斯特朗的谈话》",
+  "我们应当相信群众，我们应当相信党。 — 《关于农业合作化问题》",
+  "独立自主，自力更生。 — 《抗日战争胜利后的时局和我们的方针》",
+  "百花齐放，百家争鸣。 — 《关于正确处理人民内部矛盾的问题》",
+  "好好学习，天天向上。 — 题词",
+  "发展体育运动，增强人民体质。 — 题词",
+  "向雷锋同志学习。 — 题词",
+  "自己动手，丰衣足食。 — 题词",
+  "团结、紧张、严肃、活泼。 — 抗大校训",
+  "夺取全国胜利，这只是万里长征走完了第一步。 — 《在中国共产党第七届中央委员会第二次全体会议上的报告》",
+  "务必使同志们继续地保持谦虚、谨慎、不骄、不躁的作风，务必使同志们继续地保持艰苦奋斗的作风。 — 《在中国共产党第七届中央委员会第二次全体会议上的报告》",
+  "我们不但善于破坏一个旧世界，我们还将善于建设一个新世界。 — 《在中国共产党第七届中央委员会第二次全体会议上的报告》",
+  "政治工作是一切经济工作的生命线。 — 《中国农村的社会主义高潮》按语",
+  "人民群众有无限的创造力。 — 《中国农村的社会主义高潮》按语",
+  "调查就是解决问题。 — 《反对本本主义》",
+  "你要知道梨子的滋味，你就得变革梨子，亲口吃一吃。 — 《实践论》",
+  "外因是变化的条件，内因是变化的根据，外因通过内因而起作用。 — 《矛盾论》",
+  "伤其十指，不如断其一指。 — 《中国革命战争的战略问题》",
+  "集中优势兵力，各个歼灭敌人。 — 《集中优势兵力，各个歼灭敌人》",
+  "战略上藐视敌人，战术上重视敌人。 — 《中国革命战争的战略问题》",
+  "兵民是胜利之本。 — 《论持久战》",
+  "战争之伟力之最深厚的根源，存在于民众之中。 — 《论持久战》",
+  "坚持抗战，坚持统一战线，坚持持久战。 — 《论持久战》",
+  "凡是敌人反对的，我们就要拥护；凡是敌人拥护的，我们就要反对。 — 《和英国记者贝特兰的谈话》",
+  "我们是中国人，我们就要为中国的独立和解放而斗争。 — 《中国革命和中国共产党》",
+  "革命不是请客吃饭，不是做文章，不是绘画绣花。 — 《湖南农民运动考察报告》",
+  "矫枉必须过正，不过正不能矫枉。 — 《湖南农民运动考察报告》",
+  "一切群众的实际生活问题，都是我们应当注意的问题。 — 《关心群众生活，注意工作方法》",
+  "只有人们的社会实践，才是人们对于外界认识的真理性的标准。 — 《实践论》",
+  "感觉到了的东西，我们不能立刻理解它，只有理解了的东西才更深刻地感觉它。 — 《实践论》",
+  "理性认识依赖于感性认识，感性认识有待于发展到理性认识。 — 《实践论》",
+  "真理的标准只能是社会的实践。 — 《实践论》",
+  "不同质的矛盾，只有用不同质的方法才能解决。 — 《矛盾论》",
+  "研究问题，忌带主观性、片面性和表面性。 — 《矛盾论》",
+  "事物的矛盾法则，即对立统一的法则，是唯物辩证法的最根本的法则。 — 《矛盾论》",
+  "共产党人必须随时准备坚持真理，因为任何真理都是符合于人民利益的。 — 《论联合政府》",
+  "全心全意地为人民服务，一刻也不脱离群众。 — 《论联合政府》",
+  "下定决心，不怕牺牲，排除万难，去争取胜利。 — 《愚公移山》"
+];
+
+var ieltsSentences = [
+  {en:"It is widely acknowledged that education plays a crucial role in personal development.", zh:"人们普遍认为教育在个人发展中起着至关重要的作用。"},
+  {en:"There is a growing concern about the impact of social media on mental health.", zh:"人们对社交媒体对心理健康的影响越来越关注。"},
+  {en:"From my perspective, this issue should be addressed from multiple angles.", zh:"在我看来，这个问题应该从多个角度来解决。"},
+  {en:"It is generally accepted that hard work is the key to success.", zh:"人们普遍认为努力工作是成功的关键。"},
+  {en:"Recent studies have shown that regular exercise can significantly improve cognitive function.", zh:"最近的研究表明，定期锻炼可以显著改善认知功能。"},
+  {en:"The advantages of this approach far outweigh its potential drawbacks.", zh:"这种方法的优势远大于其潜在的缺点。"},
+  {en:"It is undeniable that technology has transformed the way we communicate.", zh:"不可否认，技术已经改变了我们的交流方式。"},
+  {en:"This essay will examine both sides of the argument before reaching a conclusion.", zh:"本文将在得出结论之前检视双方论点。"},
+  {en:"Taking all these factors into consideration, we can draw the conclusion that...", zh:"综合考虑所有这些因素，我们可以得出结论……"},
+  {en:"It is essential for individuals to take responsibility for their own actions.", zh:"个人对自己的行为负责是至关重要的。"},
+  {en:"The government should implement stricter regulations to address this problem.", zh:"政府应实施更严格的法规来解决这个问题。"},
+  {en:"There is no denying that environmental protection is of utmost importance.", zh:"不可否认，环境保护至关重要。"},
+  {en:"With the rapid development of technology, people's lifestyles have changed dramatically.", zh:"随着技术的快速发展，人们的生活方式发生了巨大变化。"},
+  {en:"It is high time that we took effective measures to tackle this issue.", zh:"是我们采取有效措施解决这个问题的时候了。"},
+  {en:"One of the most pressing problems facing society today is climate change.", zh:"当今社会面临的最紧迫问题之一是气候变化。"},
+  {en:"Research indicates that a balanced diet is fundamental to maintaining good health.", zh:"研究表明，均衡饮食是保持健康的基础。"},
+  {en:"The issue has sparked a heated debate among scholars and policymakers.", zh:"这个问题在学者和政策制定者中引发了激烈的辩论。"},
+  {en:"It is worth noting that cultural differences can lead to misunderstandings.", zh:"值得注意的是，文化差异可能导致误解。"},
+  {en:"The evidence suggests that early intervention can make a significant difference.", zh:"证据表明，早期干预可以产生重大影响。"},
+  {en:"From a practical standpoint, this solution is both feasible and cost-effective.", zh:"从实际角度来看，这个解决方案既可行又具有成本效益。"},
+  {en:"It could be argued that traditional methods are still relevant in modern society.", zh:"可以说传统方法在现代社会中仍然具有相关性。"},
+  {en:"The data reveals a clear correlation between education level and income.", zh:"数据显示教育水平与收入之间存在明显的相关性。"},
+  {en:"It is imperative that we strike a balance between economic growth and environmental protection.", zh:"我们必须在经济增长和环境保护之间取得平衡。"},
+  {en:"Many experts believe that collaboration is more effective than competition.", zh:"许多专家认为合作比竞争更有效。"},
+  {en:"The phenomenon can be attributed to several interconnected factors.", zh:"这一现象可归因于几个相互关联的因素。"},
+  {en:"It is universally recognized that innovation drives economic progress.", zh:"人们普遍认识到创新推动经济进步。"},
+  {en:"The consequences of inaction would be far-reaching and irreversible.", zh:"不采取行动的后果将是深远且不可逆转的。"},
+  {en:"A comprehensive approach is needed to address this multifaceted problem.", zh:"需要一个综合的方法来解决这个多方面的问题。"},
+  {en:"It stands to reason that well-educated citizens contribute more to society.", zh:"理所当然，受过良好教育的公民对社会贡献更大。"},
+  {en:"The survey conducted last month yielded some interesting results.", zh:"上个月进行的调查得出了一些有趣的结果。"},
+  {en:"It is a well-known fact that reading extensively broadens one's horizons.", zh:"众所周知，广泛阅读能拓宽人的视野。"},
+  {en:"Contrary to popular belief, the results were not statistically significant.", zh:"与普遍看法相反，结果在统计上并不显著。"}
+];
+
+var ieltsWords = [
+  {word:"abundant", meaning:"丰富的，大量的", pos:"adj."},
+  {word:"accelerate", meaning:"加速，促进", pos:"v."},
+  {word:"accommodate", meaning:"容纳，适应", pos:"v."},
+  {word:"advocate", meaning:"提倡，主张", pos:"v./n."},
+  {word:"ambiguous", meaning:"模糊的，有歧义的", pos:"adj."},
+  {word:"analyze", meaning:"分析", pos:"v."},
+  {word:"anticipate", meaning:"预期，预料", pos:"v."},
+  {word:"arbitrary", meaning:"任意的，武断的", pos:"adj."},
+  {word:"assemble", meaning:"集合，组装", pos:"v."},
+  {word:"assess", meaning:"评估，评价", pos:"v."},
+  {word:"attribute", meaning:"归因于", pos:"v./n."},
+  {word:"benevolent", meaning:"仁慈的，善意的", pos:"adj."},
+  {word:"comprehensive", meaning:"全面的，综合的", pos:"adj."},
+  {word:"concept", meaning:"概念，观念", pos:"n."},
+  {word:"consequence", meaning:"后果，结果", pos:"n."},
+  {word:"controversy", meaning:"争议，争论", pos:"n."},
+  {word:"demonstrate", meaning:"证明，展示", pos:"v."},
+  {word:"derive", meaning:"源于，得到", pos:"v."},
+  {word:"deteriorate", meaning:"恶化，变坏", pos:"v."},
+  {word:"diverse", meaning:"多样的，不同的", pos:"adj."},
+  {word:"dominant", meaning:"占主导的，支配的", pos:"adj."},
+  {word:"elaborate", meaning:"详细阐述", pos:"v./adj."},
+  {word:"enhance", meaning:"增强，提高", pos:"v."},
+  {word:"essential", meaning:"必要的，本质的", pos:"adj."},
+  {word:"evaluate", meaning:"评价，评估", pos:"v."},
+  {word:"evident", meaning:"明显的，显然的", pos:"adj."},
+  {word:"fluctuate", meaning:"波动，起伏", pos:"v."},
+  {word:"fundamental", meaning:"基本的，根本的", pos:"adj."},
+  {word:"generate", meaning:"产生，引起", pos:"v."},
+  {word:"hypothesis", meaning:"假设，假说", pos:"n."},
+  {word:"implement", meaning:"实施，执行", pos:"v./n."},
+  {word:"implication", meaning:"含义，暗示", pos:"n."},
+  {word:"inevitable", meaning:"不可避免的", pos:"adj."},
+  {word:"innovate", meaning:"创新，改革", pos:"v."},
+  {word:"integrate", meaning:"整合，融入", pos:"v."},
+  {word:"justify", meaning:"证明...是正当的", pos:"v."},
+  {word:"legitimate", meaning:"合法的，合理的", pos:"adj."},
+  {word:"magnitude", meaning:"重要性，规模", pos:"n."},
+  {word:"manipulate", meaning:"操纵，操作", pos:"v."},
+  {word:"negotiate", meaning:"谈判，协商", pos:"v."}
+];
+
+var industryData = {
+  medical: {
+    title: "🏥 医疗（肿瘤）法律及政策",
+    items: [
+      {tag:"示例", text:"国家卫健委发布《肿瘤诊疗质量提升行动计划》，强调多学科诊疗模式（MDT）在肿瘤治疗中的规范化应用。"},
+      {tag:"示例", text:"医保局调整靶向药物报销目录，新增20余种抗肿瘤创新药纳入医保支付范围，减轻患者负担。"},
+      {tag:"示例", text:"《药品管理法》修订版加强临床试验数据真实性要求，对造假行为加大处罚力度。"},
+      {tag:"示例", text:"CDE发布《抗肿瘤新药附条件批准上市技术指导原则》，明确附条件批准的适用范围和上市后要求。"},
+      {tag:"示例", text:"国家推行DRG/DIP支付方式改革三年行动计划，肿瘤诊疗费用管控成为重点领域。"}
+    ]
+  },
+  tiktok: {
+    title: "📱 TikTok热门视频和选品趋势",
+    items: [
+      {tag:"示例", text:"便携式榨汁杯在东南亚市场爆火，单视频播放量超500万，带动跨境销量增长300%。"},
+      {tag:"示例", text:"智能家居类产品持续走热，智能灯带和感应小夜灯成为TikTok Shop美区热销品。"},
+      {tag:"示例", text:"宠物用品赛道增长强劲，自动喂食器和宠物毛刷套装在欧美市场月销破万单。"},
+      {tag:"示例", text:"健身周边产品热度回升，弹力带套装和运动水杯成为短视频带货新宠。"},
+      {tag:"示例", text:"美妆工具类目中，硅胶洁面仪和美妆蛋套装在拉美市场增长显著。"}
+    ]
+  },
+  consulting: {
+    title: "💼 国内咨询公司行业风向",
+    items: [
+      {tag:"示例", text:"数字化转型咨询需求持续增长，制造业企业对工业互联网和数据治理咨询的关注度提升。"},
+      {tag:"示例", text:"ESG咨询成为新增长点，头部咨询公司纷纷组建ESG专项团队服务上市公司。"},
+      {tag:"示例", text:"国资国企改革咨询保持活跃，混合所有制改革和三项制度改革项目需求旺盛。"},
+      {tag:"示例", text:"供应链重构咨询需求上升，企业关注供应链韧性和近岸外包策略。"},
+      {tag:"示例", text:"AI应用咨询快速兴起，企业对大模型落地场景和AI战略规划的需求显著增加。"}
+    ]
+  }
+};
+
+var navModules = [
+  {id:"home", icon:"🏠", label:"主页"},
+  {id:"news", icon:"📰", label:"新闻推送"},
+  {id:"todo", icon:"✅", label:"今日计划"},
+  {id:"study", icon:"📚", label:"学习打卡"},
+  {id:"industry", icon:"🏥", label:"行业资讯"},
+  {id:"success", icon:"🏆", label:"成功日记"},
+  {id:"memo", icon:"📝", label:"备忘录"},
+  {id:"mood", icon:"😊", label:"心情记录"},
+  {id:"calendar", icon:"📅", label:"日历"}
+];
+
+var moods = [
+  {value:1, emoji:"😭", label:"超级难过", color:"#E53935"},
+  {value:2, emoji:"😞", label:"不开心", color:"#FB8C00"},
+  {value:3, emoji:"😐", label:"平静", color:"#FDD835"},
+  {value:4, emoji:"😊", label:"快乐", color:"#43A047"},
+  {value:5, emoji:"🤩", label:"超级幸福", color:"#00897B"}
+];
+
+// ===================== STATE =====================
+var appData = loadData();
+var currentModule = "home";
+var selectedMood = null;
+var modalImages = [];
+var calendarDate = new Date();
+var selectedCalendarDate = null;
+
+// ===================== STORAGE =====================
+function loadData() {
+  try {
+    var raw = localStorage.getItem("xihui_v2_data");
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {entries:[], reminders:[]};
+}
+function saveData() {
+  localStorage.setItem("xihui_v2_data", JSON.stringify(appData));
+}
+
+// ===================== NAV =====================
+function renderNav() {
+  var html = "";
+  for (var i=0; i<navModules.length; i++) {
+    var m = navModules[i];
+    html += '<div class="nav-item" data-module="'+m.id+'" onclick="switchModule(\''+m.id+'\')">';
+    html += '<span class="icon">'+m.icon+'</span>';
+    html += '<span class="label">'+m.label+'</span>';
+    html += '</div>';
+  }
+  document.getElementById("navList").innerHTML = html;
+}
+function switchModule(id) {
+  currentModule = id;
+  var pages = document.querySelectorAll(".page");
+  for (var i=0; i<pages.length; i++) pages[i].classList.remove("active");
+  var page = document.getElementById("page-"+id);
+  if (page) page.classList.add("active");
+  var navs = document.querySelectorAll(".nav-item");
+  for (var i=0; i<navs.length; i++) {
+    navs[i].classList.toggle("active", navs[i].getAttribute("data-module")===id);
+  }
+  // Close sidebar on mobile
+  if (window.innerWidth <= 768) closeSidebarMobile();
+  // Render module
+  renderModule(id);
+}
+function renderModule(id) {
+  switch(id) {
+    case "home": renderHome(); break;
+    case "news": renderNews(); break;
+    case "todo": renderTodo(); break;
+    case "study": renderStudy(); break;
+    case "industry": renderIndustry(); break;
+    case "success": renderSuccess(); break;
+    case "memo": renderMemo(); break;
+    case "mood": renderMood(); break;
+    case "calendar": renderCalendar(); break;
+  }
+}
+
+function toggleSidebar() {
+  var sb = document.getElementById("sidebar");
+  if (window.innerWidth <= 768) {
+    sb.classList.toggle("expanded");
+    document.getElementById("sidebarOverlay").classList.toggle("show", sb.classList.contains("expanded"));
+  } else {
+    sb.classList.toggle("collapsed");
+  }
+}
+function closeSidebarMobile() {
+  var sb = document.getElementById("sidebar");
+  if (window.innerWidth <= 768) {
+    sb.classList.remove("expanded");
+    document.getElementById("sidebarOverlay").classList.remove("show");
+  }
+}
+
+// ===================== HOME =====================
+function renderHome() {
+  var now = new Date();
+  var dateStr = now.getFullYear()+"年"+(now.getMonth()+1)+"月"+now.getDate()+"日";
+  var weekdays = ["日","一","二","三","四","五","六"];
+  var timeStr = pad(now.getHours())+":"+pad(now.getMinutes())+":"+pad(now.getSeconds());
+  var dayIdx = now.getDate() - 1;
+  var quote = maoQuotes[dayIdx % maoQuotes.length];
+
+  var todayStr = formatDate(now);
+  var todayTodos = appData.entries.filter(function(e){return e.type==="todo" && e.date===todayStr;});
+  var doneCount = todayTodos.filter(function(e){return e.done;}).length;
+  var todayMood = appData.entries.filter(function(e){return e.type==="mood" && e.date===todayStr;});
+  var moodEmoji = todayMood.length>0 ? moods[todayMood[todayMood.length-1].mood-1].emoji : "—";
+
+  var html = '<div class="card">';
+  html += '<div class="home-date">'+dateStr+' 星期'+weekdays[now.getDay()]+'</div>';
+  html += '<div class="home-time" id="homeTime">'+timeStr+'</div>';
+  html += '</div>';
+  html += '<div class="home-quote">';
+  html += '<div>📖 每日毛选语录</div>';
+  html += '<div style="margin-top:8px; font-size:18px; font-weight:500;">'+quote.split(" — ")[0]+'</div>';
+  html += '<div class="source">— '+quote.split(" — ")[1]+'</div>';
+  html += '</div>';
+  html += '<div class="home-stats">';
+  html += '<div class="stat-card"><div class="num">'+todayTodos.length+'</div><div class="label">今日待办</div></div>';
+  html += '<div class="stat-card"><div class="num">'+doneCount+'</div><div class="label">已完成</div></div>';
+  html += '<div class="stat-card"><div class="num">'+moodEmoji+'</div><div class="label">今日心情</div></div>';
+  html += '</div>';
+  html += '<div class="card" style="margin-top:16px;">';
+  html += '<div class="card-title">⚡ 快捷操作</div>';
+  html += '<div style="display:flex; gap:8px; flex-wrap:wrap;">';
+  html += '<button class="btn btn-outline" onclick="openModal(\'todo\')">添加计划</button>';
+  html += '<button class="btn btn-outline" onclick="openModal(\'success\')">写成功日记</button>';
+  html += '<button class="btn btn-outline" onclick="openModal(\'memo\')">记备忘录</button>';
+  html += '<button class="btn btn-outline" onclick="openModal(\'mood\')">记心情</button>';
+  html += '<button class="btn btn-outline" onclick="switchModule(\'news\')">看新闻</button>';
+  html += '<button class="btn btn-outline" onclick="switchModule(\'study\')">学习打卡</button>';
+  html += '</div>';
+  html += '</div>';
+  document.getElementById("page-home").innerHTML = html;
+}
+function updateHomeTime() {
+  var el = document.getElementById("homeTime");
+  if (el) {
+    var now = new Date();
+    el.textContent = pad(now.getHours())+":"+pad(now.getMinutes())+":"+pad(now.getSeconds());
+  }
+}
+
+// ===================== NEWS =====================
+var newsLoaded = false;
+var newsUpdateTime = "";
+function fetchWithTimeout(url, timeout) {
+  return new Promise(function(resolve, reject){
+    var timer = setTimeout(function(){ reject(new Error("timeout")); }, timeout);
+    fetch(url).then(function(res){
+      clearTimeout(timer);
+      if (!res.ok) { reject(new Error("HTTP "+res.status)); return; }
+      return res.json().then(function(data){ resolve(data); });
+    }).catch(function(err){ clearTimeout(timer); reject(err); });
+  });
+}
+function renderNews() {
+  var html = '<div class="news-update-time">';
+  if (newsUpdateTime) html += '<span>更新时间：'+newsUpdateTime+'</span>';
+  else html += '<span>正在加载...</span>';
+  html += '<button class="refresh-btn" onclick="loadNews()">🔄 刷新</button>';
+  html += '</div>';
+  html += '<div id="newsContent"><div class="news-loading">正在获取最新热点...</div></div>';
+  document.getElementById("page-news").innerHTML = html;
+  if (!newsLoaded) loadNews();
+}
+function loadNews() {
+  newsLoaded = true;
+  newsUpdateTime = formatDateTime(new Date());
+  var container = document.getElementById("newsContent");
+  if (container) container.innerHTML = '<div class="news-loading">正在获取最新热点...</div>';
+
+  var sources = [
+    {name:"抖音热榜", url:"https://60s.viki.moe/v2/douyin?encoding=json", icon:"🎵"},
+    {name:"今日头条", url:"https://60s.viki.moe/v2/toutiao?encoding=json", icon:"📰"},
+    {name:"知乎热榜", url:"https://60s.viki.moe/v2/zhihu?encoding=json", icon:"💡"},
+    {name:"豆瓣讨论", url:"https://60s.viki.moe/v2/douban?encoding=json", icon:"🎬"}
+  ];
+
+  var results = {};
+  var pending = sources.length;
+  function checkDone() {
+    pending--;
+    if (pending <= 0) {
+      renderNewsResults(results);
+      var ut = document.querySelector(".news-update-time span");
+      if (ut) ut.textContent = "更新时间："+newsUpdateTime;
+    }
+  }
+
+  sources.forEach(function(src){
+    fetchWithTimeout(src.url, 7000).then(function(data){
+      results[src.name] = {icon:src.icon, data:(data && data.data) ? data.data.slice(0,10) : []};
+      checkDone();
+    }).catch(function(err){
+      if (src.name === "豆瓣讨论") {
+        results[src.name] = null; // skip 404
+      } else {
+        results[src.name] = {icon:src.icon, data:[], error:true};
+      }
+      checkDone();
+    });
+  });
+}
+function renderNewsResults(results) {
+  var html = "";
+  var order = ["抖音热榜","今日头条","知乎热榜","豆瓣讨论"];
+  for (var i=0; i<order.length; i++) {
+    var name = order[i];
+    var r = results[name];
+    if (!r) continue;
+    html += '<div class="news-section">';
+    html += '<h3>'+r.icon+' '+name+'</h3>';
+    if (r.error) {
+      html += '<div class="news-loading">加载失败，稍后重试</div>';
+    } else if (r.data.length === 0) {
+      html += '<div class="news-loading">暂无数据</div>';
+    } else {
+      for (var j=0; j<r.data.length; j++) {
+        var item = r.data[j];
+        var searchUrl = "https://www.baidu.com/s?wd="+encodeURIComponent(item.title || "");
+        var hot = item.hot_value ? formatHot(item.hot_value) : "";
+        var rankClass = j<3 ? "top3" : "";
+        html += '<div class="news-item">';
+        html += '<span class="news-rank '+rankClass+'">'+(j+1)+'</span>';
+        html += '<a class="news-title" href="'+searchUrl+'" target="_blank" rel="noopener">'+(item.title||"")+'</a>';
+        if (hot) html += '<span class="news-hot">'+hot+'</span>';
+        html += '</div>';
+      }
+    }
+    html += '</div>';
+  }
+  var container = document.getElementById("newsContent");
+  if (container) container.innerHTML = html;
+}
+function formatHot(val) {
+  if (typeof val === "number") {
+    if (val >= 10000) return (val/10000).toFixed(1)+"万";
+    return val+"";
+  }
+  return val || "";
+}
+
+// ===================== TODO =====================
+function renderTodo() {
+  var todayStr = formatDate(new Date());
+  var todos = appData.entries.filter(function(e){return e.type==="todo";});
+  todos.sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+
+  var html = '<div class="card"><div class="card-title">✅ 今日计划</div>';
+  html += '<button class="btn btn-outline" onclick="openModal(\'todo\')">+ 添加计划</button>';
+  html += '</div>';
+
+  if (todos.length === 0) {
+    html += '<div class="empty-state">还没有计划，点击右下角 + 添加</div>';
+  } else {
+    for (var i=0; i<todos.length; i++) {
+      html += renderEntryHtml(todos[i], "todo");
+    }
+  }
+  document.getElementById("page-todo").innerHTML = html;
+}
+
+// ===================== STUDY =====================
+function renderStudy() {
+  var sentences = shuffle(ieltsSentences).slice(0,10);
+  var words = shuffle(ieltsWords).slice(0,10);
+
+  var html = '<div class="card"><div class="card-title">📚 雅思英语学习打卡</div>';
+  html += '<p style="font-size:13px; color:#666;">每次加载随机推送10句句型 + 10个核心单词，刷新页面可换新。</p>';
+  html += '</div>';
+
+  html += '<div class="card"><div class="card-title">✏️ 雅思常用句型（10句）</div>';
+  for (var i=0; i<sentences.length; i++) {
+    html += '<div class="ielts-sentence">';
+    html += '<div class="en">'+(i+1)+'. '+sentences[i].en+'</div>';
+    html += '<div class="zh">'+sentences[i].zh+'</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="card"><div class="card-title">📝 雅思核心单词（10个）</div>';
+  html += '<div style="display:flex; flex-wrap:wrap;">';
+  for (var i=0; i<words.length; i++) {
+    html += '<div class="ielts-word">';
+    html += '<span class="word">'+words[i].word+'</span><span class="pos">'+words[i].pos+'</span>';
+    html += '<span class="meaning">'+words[i].meaning+'</span>';
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  document.getElementById("page-study").innerHTML = html;
+}
+
+// ===================== INDUSTRY =====================
+function renderIndustry() {
+  var html = "";
+  var sections = ["medical","tiktok","consulting"];
+  for (var i=0; i<sections.length; i++) {
+    var sec = industryData[sections[i]];
+    html += '<div class="industry-card">';
+    html += '<h3>'+sec.title+'</h3>';
+    for (var j=0; j<sec.items.length; j++) {
+      html += '<div class="industry-item">';
+      html += '<span class="industry-tag">'+sec.items[j].tag+'</span> ';
+      html += sec.items[j].text;
+      html += '</div>';
+    }
+    html += '<div style="font-size:12px; color:#999; margin-top:8px;">⚠ 示例数据，待接入实时源</div>';
+    html += '</div>';
+  }
+  document.getElementById("page-industry").innerHTML = html;
+}
+
+// ===================== SUCCESS DIARY =====================
+function renderSuccess() {
+  var items = appData.entries.filter(function(e){return e.type==="success";});
+  items.sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+
+  var html = '<div class="card"><div class="card-title">🏆 成功日记</div>';
+  html += '<button class="btn btn-outline" onclick="openModal(\'success\')">+ 记录成功</button>';
+  html += '</div>';
+
+  if (items.length === 0) {
+    html += '<div class="empty-state">还没有记录，记录每一份成功！</div>';
+  } else {
+    for (var i=0; i<items.length; i++) {
+      html += renderEntryHtml(items[i], "success");
+    }
+  }
+  document.getElementById("page-success").innerHTML = html;
+}
+
+// ===================== MEMO =====================
+function renderMemo() {
+  var items = appData.entries.filter(function(e){return e.type==="memo";});
+  items.sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+
+  var html = '<div class="card"><div class="card-title">📝 备忘录</div>';
+  html += '<button class="btn btn-outline" onclick="openModal(\'memo\')">+ 快速记录</button>';
+  html += '</div>';
+
+  if (items.length === 0) {
+    html += '<div class="empty-state">还没有备忘录</div>';
+  } else {
+    for (var i=0; i<items.length; i++) {
+      html += renderEntryHtml(items[i], "memo");
+    }
+  }
+  document.getElementById("page-memo").innerHTML = html;
+}
+
+// ===================== MOOD =====================
+function renderMood() {
+  var items = appData.entries.filter(function(e){return e.type==="mood";});
+  items.sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+
+  var html = '<div class="card"><div class="card-title">😊 心情记录</div>';
+  html += '<div class="mood-buttons">';
+  for (var i=0; i<moods.length; i++) {
+    html += '<div class="mood-btn" onclick="quickMood('+(i+1)+')" style="cursor:pointer;">';
+    html += '<span>'+moods[i].emoji+'</span>';
+    html += '<span class="label">'+moods[i].label+'</span>';
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  if (items.length === 0) {
+    html += '<div class="empty-state">还没有心情记录</div>';
+  } else {
+    for (var i=0; i<items.length; i++) {
+      var mood = moods[items[i].mood-1] || moods[2];
+      html += '<div class="mood-history-item">';
+      html += '<div class="mood-color-bar" style="background:'+mood.color+';"></div>';
+      html += '<div class="emoji">'+mood.emoji+'</div>';
+      html += '<div class="info">';
+      html += '<div class="date">'+(items[i].date||"")+" "+mood.label+'</div>';
+      if (items[i].content) html += '<div class="desc">'+escapeHtml(items[i].content)+'</div>';
+      if (items[i].images && items[i].images.length) {
+        html += '<div class="todo-images">';
+        for (var j=0; j<items[i].images.length; j++) {
+          html += '<img src="'+items[i].images[j]+'" onclick="viewImage(this.src)">';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+      html += '<div class="actions"><button onclick="deleteEntry(\''+items[i].id+'\')">🗑</button></div>';
+      html += '</div>';
+    }
+  }
+  document.getElementById("page-mood").innerHTML = html;
+}
+function quickMood(val) {
+  selectedMood = val;
+  openModal("mood");
+  setTimeout(function(){
+    var typeSelect = document.getElementById("modalType");
+    if (typeSelect) typeSelect.value = "mood";
+    showMoodSelector();
+    var btns = document.querySelectorAll("#modalMoodBtns .mood-btn");
+    btns.forEach(function(b, i){
+      b.classList.toggle("selected", (i+1)===val);
+    });
+  }, 100);
+}
+
+// ===================== CALENDAR =====================
+function renderCalendar() {
+  var year = calendarDate.getFullYear();
+  var month = calendarDate.getMonth();
+  var firstDay = new Date(year, month, 1).getDay();
+  var daysInMonth = new Date(year, month+1, 0).getDate();
+  var daysInPrev = new Date(year, month, 0).getDate();
+  var today = new Date();
+  var todayStr = formatDate(today);
+
+  var html = '<div class="calendar">';
+  html += '<div class="calendar-header">';
+  html += '<button onclick="prevMonth()">‹</button>';
+  html += '<span class="month">'+year+'年'+(month+1)+'月</span>';
+  html += '<button onclick="nextMonth()">›</button>';
+  html += '</div>';
+  html += '<div class="calendar-grid">';
+  var dayHeaders = ["日","一","二","三","四","五","六"];
+  for (var i=0; i<7; i++) html += '<div class="calendar-day-header">'+dayHeaders[i]+'</div>';
+
+  for (var i=0; i<firstDay; i++) {
+    var d = daysInPrev - firstDay + i + 1;
+    html += '<div class="calendar-day other-month">'+d+'</div>';
+  }
+  for (var i=1; i<=daysInMonth; i++) {
+    var dateStr = year+"-"+pad(month+1)+"-"+pad(i);
+    var hasEntry = appData.entries.some(function(e){return e.date===dateStr;});
+    var hasReminder = appData.reminders.some(function(r){return r.date===dateStr;});
+    var classes = "calendar-day";
+    if (dateStr === todayStr) classes += " today";
+    if (dateStr === selectedCalendarDate) classes += " selected";
+    html += '<div class="'+classes+'" onclick="selectCalendarDate(\''+dateStr+'\')">';
+    html += '<span>'+i+'</span>';
+    if (hasEntry || hasReminder) {
+      html += '<span class="dot'+(hasReminder?' reminder-dot':'')+'"></span>';
+    }
+    html += '</div>';
+  }
+  var totalCells = firstDay + daysInMonth;
+  var remaining = (7 - (totalCells % 7)) % 7;
+  for (var i=1; i<=remaining; i++) {
+    html += '<div class="calendar-day other-month">'+i+'</div>';
+  }
+  html += '</div>';
+
+  if (selectedCalendarDate) {
+    html += '<div class="calendar-day-info">';
+    html += '<h4>📅 '+selectedCalendarDate+' 的记录</h4>';
+    var dayEntries = appData.entries.filter(function(e){return e.date===selectedCalendarDate;});
+    var dayReminders = appData.reminders.filter(function(r){return r.date===selectedCalendarDate;});
+    if (dayReminders.length > 0) {
+      html += '<div style="margin-bottom:12px;"><strong>⏰ 提醒：</strong></div>';
+      for (var i=0; i<dayReminders.length; i++) {
+        html += '<div class="reminder-item" style="margin-bottom:6px;">';
+        html += '<div class="title">'+escapeHtml(dayReminders[i].title)+'</div>';
+        if (dayReminders[i].note) html += '<div style="font-size:13px; color:#666;">'+escapeHtml(dayReminders[i].note)+'</div>';
+        html += '<button class="btn btn-outline" style="font-size:12px; padding:4px 8px; margin-top:4px;" onclick="deleteReminder(\''+dayReminders[i].id+'\')">删除</button>';
+        html += '</div>';
+      }
+    }
+    if (dayEntries.length > 0) {
+      for (var i=0; i<dayEntries.length; i++) {
+        html += renderEntryHtml(dayEntries[i], dayEntries[i].type);
+      }
+    }
+    if (dayEntries.length === 0 && dayReminders.length === 0) {
+      html += '<div class="empty-state">当日暂无记录</div>';
+    }
+    html += '<button class="btn btn-outline" onclick="addReminderForDate(\''+selectedCalendarDate+'\')" style="margin-top:8px;">+ 添加提醒</button>';
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById("page-calendar").innerHTML = html;
+}
+function prevMonth() {
+  calendarDate.setMonth(calendarDate.getMonth()-1);
+  renderCalendar();
+}
+function nextMonth() {
+  calendarDate.setMonth(calendarDate.getMonth()+1);
+  renderCalendar();
+}
+function selectCalendarDate(dateStr) {
+  selectedCalendarDate = dateStr;
+  renderCalendar();
+}
+function addReminderForDate(dateStr) {
+  var title = prompt("提醒事项：");
+  if (!title) return;
+  var note = prompt("备注（可选）：") || "";
+  var reminder = {id: genId(), date:dateStr, title:title, note:note};
+  appData.reminders.push(reminder);
+  saveData();
+  renderCalendar();
+}
+
+// ===================== ENTRY RENDER =====================
+function renderEntryHtml(entry, type) {
+  var html = '<div class="entry-item" id="entry-'+entry.id+'">';
+  html += '<div class="header">';
+  html += '<span class="date">'+(entry.date||"")+'</span>';
+  html += '<div class="actions">';
+  if (type === "todo") {
+    html += '<button onclick="toggleDone(\''+entry.id+'\')">'+(entry.done?'↩️':'✓')+'</button>';
+    html += '<button onclick="editEntry(\''+entry.id+'\')">✏️</button>';
+  } else {
+    html += '<button onclick="editEntry(\''+entry.id+'\')">✏️</button>';
+  }
+  html += '<button onclick="deleteEntry(\''+entry.id+'\')">🗑</button>';
+  html += '</div>';
+  html += '</div>';
+
+  if (type === "todo") {
+    html += '<div class="todo-item" style="background:none; box-shadow:none; padding:0; margin:0;">';
+    html += '<div class="todo-checkbox '+(entry.done?'checked':'')+'" onclick="toggleDone(\''+entry.id+'\')"></div>';
+    html += '<div class="todo-content '+(entry.done?'done':'')+'">';
+    html += '<div class="todo-text">'+escapeHtml(entry.content||"")+'</div>';
+    if (entry.link) html += '<div class="todo-link"><a href="'+entry.link+'" target="_blank" rel="noopener">🔗 链接</a></div>';
+    if (entry.video) {
+      var embed = getVideoEmbed(entry.video);
+      if (embed) html += '<div class="todo-video"><iframe src="'+embed+'" allowfullscreen></iframe></div>';
+    }
+    if (entry.images && entry.images.length) {
+      html += '<div class="todo-images">';
+      for (var j=0; j<entry.images.length; j++) {
+        html += '<img src="'+entry.images[j]+'" onclick="viewImage(this.src)">';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '</div>';
+  } else {
+    if (entry.content) html += '<div class="text">'+escapeHtml(entry.content)+'</div>';
+    if (entry.link) {
+      html += '<div class="link"><a href="'+entry.link+'" target="_blank" rel="noopener">🔗 '+escapeHtml(entry.link)+'</a></div>';
+    }
+    if (entry.video) {
+      var embed = getVideoEmbed(entry.video);
+      if (embed) html += '<div class="video"><iframe src="'+embed+'" allowfullscreen></iframe></div>';
+    }
+    if (entry.images && entry.images.length) {
+      html += '<div class="images">';
+      for (var j=0; j<entry.images.length; j++) {
+        html += '<img src="'+entry.images[j]+'" onclick="viewImage(this.src)">';
+      }
+      html += '</div>';
+    }
+  }
+  html += '</div>';
+  return html;
+}
+function toggleDone(id) {
+  for (var i=0; i<appData.entries.length; i++) {
+    if (appData.entries[i].id === id) {
+      appData.entries[i].done = !appData.entries[i].done;
+      saveData();
+      renderModule(currentModule);
+      return;
+    }
+  }
+}
+function editEntry(id) {
+  var entry = null;
+  for (var i=0; i<appData.entries.length; i++) {
+    if (appData.entries[i].id === id) { entry = appData.entries[i]; break; }
+  }
+  if (!entry) return;
+  var newText = prompt("修改内容：", entry.content||"");
+  if (newText === null) return;
+  entry.content = newText;
+  saveData();
+  renderModule(currentModule);
+}
+function deleteEntry(id) {
+  if (!confirm("确定删除？")) return;
+  appData.entries = appData.entries.filter(function(e){return e.id !== id;});
+  saveData();
+  renderModule(currentModule);
+}
+function deleteReminder(id) {
+  if (!confirm("确定删除此提醒？")) return;
+  appData.reminders = appData.reminders.filter(function(r){return r.id !== id;});
+  saveData();
+  renderCalendar();
+}
+
+// ===================== MODAL =====================
+function openModal(type) {
+  var overlay = document.getElementById("modalOverlay");
+  overlay.classList.add("show");
+  document.getElementById("modalContent").value = "";
+  document.getElementById("modalLink").value = "";
+  document.getElementById("modalVideo").value = "";
+  document.getElementById("modalImages").value = "";
+  document.getElementById("imagePreview").innerHTML = "";
+  modalImages = [];
+  selectedMood = null;
+  if (type) document.getElementById("modalType").value = type;
+  showMoodSelector();
+  showReminderDate();
+  renderModalMoodBtns();
+  // Set reminder date default to today
+  document.getElementById("modalReminderDate").value = formatDate(new Date());
+}
+function closeModal() {
+  document.getElementById("modalOverlay").classList.remove("show");
+}
+function showMoodSelector() {
+  var typeVal = document.getElementById("modalType").value;
+  document.getElementById("moodSelector").style.display = (typeVal === "mood") ? "block" : "none";
+}
+function showReminderDate() {
+  var typeVal = document.getElementById("modalType").value;
+  document.getElementById("reminderDate").style.display = (typeVal === "reminder") ? "block" : "none";
+}
+function renderModalMoodBtns() {
+  var html = "";
+  for (var i=0; i<moods.length; i++) {
+    html += '<div class="mood-btn" onclick="selectModalMood('+(i+1)+')" id="modalMood'+(i+1)+'">';
+    html += '<span>'+moods[i].emoji+'</span>';
+    html += '<span class="label">'+moods[i].label+'</span>';
+    html += '</div>';
+  }
+  document.getElementById("modalMoodBtns").innerHTML = html;
+}
+function selectModalMood(val) {
+  selectedMood = val;
+  var btns = document.querySelectorAll("#modalMoodBtns .mood-btn");
+  btns.forEach(function(b, i){ b.classList.toggle("selected", (i+1)===val); });
+}
+
+function handleImageSelect(input) {
+  var files = input.files;
+  if (!files) return;
+  var remaining = 9 - modalImages.length;
+  if (files.length > remaining) {
+    alert("最多上传9张图片");
+  }
+  for (var i=0; i<Math.min(files.length, remaining); i++) {
+    (function(file){
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        modalImages.push(e.target.result);
+        renderImagePreview();
+      };
+      reader.readAsDataURL(file);
+    })(files[i]);
+  }
+}
+function renderImagePreview() {
+  var html = "";
+  for (var i=0; i<modalImages.length; i++) {
+    html += '<div class="remove-img">';
+    html += '<img src="'+modalImages[i]+'">';
+    html += '<button onclick="removeModalImage('+i+')">×</button>';
+    html += '</div>';
+  }
+  document.getElementById("imagePreview").innerHTML = html;
+}
+function removeModalImage(idx) {
+  modalImages.splice(idx, 1);
+  renderImagePreview();
+}
+
+function saveModalData() {
+  var type = document.getElementById("modalType").value;
+  var content = document.getElementById("modalContent").value.trim();
+  var link = document.getElementById("modalLink").value.trim();
+  var video = document.getElementById("modalVideo").value.trim();
+
+  if (type === "reminder") {
+    var rDate = document.getElementById("modalReminderDate").value;
+    if (!rDate) { alert("请选择提醒日期"); return; }
+    if (!content) { alert("请输入提醒内容"); return; }
+    var reminder = {
+      id: genId(),
+      date: rDate,
+      title: content,
+      note: ""
+    };
+    appData.reminders.push(reminder);
+    saveData();
+    closeModal();
+    renderModule(currentModule);
+    return;
+  }
+
+  if (!content && modalImages.length === 0 && !link && !video) {
+    alert("请输入内容");
+    return;
+  }
+
+  var entry = {
+    id: genId(),
+    type: type,
+    content: content,
+    images: modalImages.slice(),
+    link: link,
+    video: video,
+    date: formatDate(new Date()),
+    createdAt: Date.now(),
+    done: false,
+    mood: (type === "mood" && selectedMood) ? selectedMood : null
+  };
+  appData.entries.push(entry);
+  saveData();
+  closeModal();
+  renderModule(currentModule);
+}
+
+// ===================== REMINDERS CHECK =====================
+function checkReminders() {
+  var today = new Date();
+  var dates = [];
+  for (var i=0; i<4; i++) {
+    var d = new Date(today);
+    d.setDate(d.getDate()+i);
+    dates.push(formatDate(d));
+  }
+  var upcoming = appData.reminders.filter(function(r){return dates.indexOf(r.date) >= 0;});
+  if (upcoming.length === 0) return;
+
+  var html = "";
+  for (var i=0; i<upcoming.length; i++) {
+    html += '<div class="reminder-item">';
+    html += '<div class="date">'+upcoming[i].date+'</div>';
+    html += '<div class="title">'+escapeHtml(upcoming[i].title)+'</div>';
+    if (upcoming[i].note) html += '<div style="font-size:13px; color:#666;">'+escapeHtml(upcoming[i].note)+'</div>';
+    html += '</div>';
+  }
+  document.getElementById("reminderList").innerHTML = html;
+  document.getElementById("reminderPopup").classList.add("show");
+}
+function closeReminderPopup() {
+  document.getElementById("reminderPopup").classList.remove("show");
+}
+
+// ===================== UTILS =====================
+function pad(n) { return n<10 ? "0"+n : ""+n; }
+function formatDate(d) {
+  return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+}
+function formatDateTime(d) {
+  return formatDate(d)+" "+pad(d.getHours())+":"+pad(d.getMinutes());
+}
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i=a.length-1; i>0; i--) {
+    var j = Math.floor(Math.random()*(i+1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+function escapeHtml(s) {
+  if (!s) return "";
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function getVideoEmbed(url) {
+  if (!url) return "";
+  // YouTube
+  var ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+  if (ytMatch) return "https://www.youtube.com/embed/"+ytMatch[1];
+  // Bilibili
+  var biliMatch = url.match(/bilibili\.com\/video\/(BV\w+|av\d+)/i);
+  if (biliMatch) {
+    var bid = biliMatch[1];
+    if (bid.toLowerCase().startsWith("av")) {
+      return "https://player.bilibili.com/player.html?aid="+bid.substring(2);
+    }
+    return "https://player.bilibili.com/player.html?bvid="+bid;
+  }
+  // Direct embed
+  return url;
+}
+function viewImage(src) {
+  window.open(src, "_blank");
+}
+
+// ===================== INIT =====================
+function init() {
+  renderNav();
+  switchModule("home");
+  setInterval(updateHomeTime, 1000);
+
+  // Modal events
+  document.getElementById("modalType").addEventListener("change", function(){
+    showMoodSelector();
+    showReminderDate();
+  });
+  document.getElementById("modalImages").addEventListener("change", function(){
+    handleImageSelect(this);
+  });
+
+  // Check reminders after 1 second
+  setTimeout(checkReminders, 1000);
+
+  // Mobile: default collapsed
+  if (window.innerWidth <= 768) {
+    document.getElementById("sidebar").classList.remove("expanded");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
