@@ -997,23 +997,181 @@ function renderStudy() {
 }
 
 // ===================== INDUSTRY =====================
+// 行业资讯 - 实时数据
+var industryCache = { medical: null, tiktok: null, consulting: null, loading: false };
+
 function renderIndustry() {
-  var html = "";
-  var sections = ["medical","tiktok","consulting"];
-  for (var i=0; i<sections.length; i++) {
-    var sec = industryData[sections[i]];
-    html += '<div class="industry-card">';
-    html += '<h3>'+sec.title+'</h3>';
-    for (var j=0; j<sec.items.length; j++) {
-      html += '<div class="industry-item">';
-      html += '<span class="industry-tag">'+sec.items[j].tag+'</span> ';
-      html += sec.items[j].text;
+  var html = '<div class="card" style="text-align:center;padding:12px 16px;">';
+  html += '<div style="font-size:13px;color:#666;">📡 实时行业资讯 · 数据来源：百度热搜 / 微博 / 抖音 / 知乎</div>';
+  html += '<div style="font-size:11px;color:#999;margin-top:4px;" id="industry-update-time"></div>';
+  html += '</div>';
+
+  // 三个板块占位
+  html += '<div id="industry-medical" class="industry-card"><h3>🏥 医疗（肿瘤）法律及政策</h3><div style="text-align:center;padding:20px;color:#999;font-size:13px;">⏳ 加载中...</div></div>';
+  html += '<div id="industry-tiktok" class="industry-card"><h3>📱 TikTok / 抖音热门视频</h3><div style="text-align:center;padding:20px;color:#999;font-size:13px;">⏳ 加载中...</div></div>';
+  html += '<div id="industry-consulting" class="industry-card"><h3>💼 商业 / 咨询行业风向</h3><div style="text-align:center;padding:20px;color:#999;font-size:13px;">⏳ 加载中...</div></div>';
+
+  document.getElementById("page-industry").innerHTML = html;
+
+  // 异步加载三个板块
+  loadIndustryMedical();
+  loadIndustryTiktok();
+  loadIndustryConsulting();
+}
+
+// 医疗板块：从百度实时热搜+微博中过滤医疗/健康/政策相关
+function loadIndustryMedical() {
+  var keywords = ['医','药','肿瘤','癌','医保','医院','卫健','健康','疫苗','药监局','CDE','DRG','DIP','临床','诊疗','护理','疾控','患者','处方','器械','审批','医保目录','集采','创新药','医保支付'];
+  var sources = [
+    { url: 'https://60s.viki.moe/v2/baidu/realtime?encoding=json', type: 'baidu' },
+    { url: 'https://60s.viki.moe/v2/weibo?encoding=json', type: 'weibo' }
+  ];
+  var results = [];
+  var done = 0;
+
+  sources.forEach(function(src) {
+    fetch(src.url, { signal: AbortSignal.timeout(8000) })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var items = d.data || [];
+        items.forEach(function(item) {
+          var title = item.title || '';
+          var desc = item.desc || item.detail || '';
+          var combined = title + ' ' + desc;
+          var matched = keywords.some(function(kw) { return combined.indexOf(kw) >= 0; });
+          if (matched) {
+            results.push({
+              title: title,
+              desc: desc.substring(0, 120),
+              link: item.link || item.url || ('https://www.baidu.com/s?wd=' + encodeURIComponent(title)),
+              source: src.type === 'baidu' ? '百度热搜' : '微博',
+              hot: item.score_desc || item.hot_value_desc || ''
+            });
+          }
+        });
+      })
+      .catch(function(e) {})
+      .finally(function() {
+        done++;
+        if (done === sources.length) {
+          renderIndustrySection('medical', '🏥 医疗（肿瘤）法律及政策', results, 'health');
+        }
+      });
+  });
+}
+
+// TikTok板块：抖音热榜
+function loadIndustryTiktok() {
+  fetch('https://60s.viki.moe/v2/douyin?encoding=json', { signal: AbortSignal.timeout(8000) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var items = (d.data || []).slice(0, 15);
+      var results = items.map(function(item) {
+        return {
+          title: item.title || '',
+          desc: '热度: ' + (item.hot_value || 0).toLocaleString(),
+          link: item.link || ('https://www.douyin.com/search/' + encodeURIComponent(item.title || '')),
+          source: '抖音热榜',
+          hot: item.hot_value ? (item.hot_value / 10000).toFixed(0) + 'w' : '',
+          cover: item.cover || ''
+        };
+      });
+      renderIndustrySection('tiktok', '📱 TikTok / 抖音热门视频', results, 'tiktok');
+    })
+    .catch(function(e) {
+      renderIndustryError('tiktok', '📱 TikTok / 抖音热门视频', '加载失败，请稍后重试');
+    });
+}
+
+// 咨询板块：从知乎热榜过滤商业/管理/咨询相关
+function loadIndustryConsulting() {
+  var keywords = ['咨询','管理','战略','行业','市场','企业','商业','转型','数字化','AI','科技','投资','融资','上市','并购','经济','消费','品牌','营销','供应链','ESG','国企','改革','增长','营收','利润','估值','IPO','创投','赛道','商业模型','商业模式'];
+  fetch('https://60s.viki.moe/v2/zhihu?encoding=json', { signal: AbortSignal.timeout(8000) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var items = d.data || [];
+      var results = [];
+      items.forEach(function(item) {
+        var title = item.title || '';
+        var detail = item.detail || '';
+        var combined = title + ' ' + detail;
+        var matched = keywords.some(function(kw) { return combined.indexOf(kw) >= 0; });
+        if (matched) {
+          results.push({
+            title: title,
+            desc: detail.substring(0, 120),
+            link: item.link || ('https://www.zhihu.com/search?q=' + encodeURIComponent(title)),
+            source: '知乎热榜',
+            hot: item.hot_value_desc || ''
+          });
+        }
+      });
+      // 如果过滤结果太少，补充前10条知乎热榜
+      if (results.length < 5) {
+        items.slice(0, 10).forEach(function(item) {
+          results.push({
+            title: item.title || '',
+            desc: (item.detail || '').substring(0, 120),
+            link: item.link || ('https://www.zhihu.com/search?q=' + encodeURIComponent(item.title || '')),
+            source: '知乎热榜',
+            hot: item.hot_value_desc || ''
+          });
+        });
+      }
+      renderIndustrySection('consulting', '💼 商业 / 咨询行业风向', results.slice(0, 15), 'consulting');
+    })
+    .catch(function(e) {
+      renderIndustryError('consulting', '💼 商业 / 咨询行业风向', '加载失败，请稍后重试');
+    });
+}
+
+// 渲染行业板块
+function renderIndustrySection(key, title, results, type) {
+  var el = document.getElementById('industry-' + key);
+  if (!el) return;
+
+  var html = '<h3>' + title + '</h3>';
+
+  if (results.length === 0) {
+    html += '<div style="text-align:center;padding:20px;color:#999;font-size:13px;">暂无相关内容，请稍后刷新</div>';
+  } else {
+    for (var i = 0; i < results.length; i++) {
+      var r = results[i];
+      html += '<div class="industry-item" style="display:block;padding:10px 0;border-bottom:1px solid #f0f0f0;">';
+      html += '<div style="display:flex;align-items:flex-start;gap:6px;">';
+      html += '<span style="background:#43A047;color:#fff;font-size:11px;padding:1px 6px;border-radius:8px;flex-shrink:0;margin-top:2px;">' + (i + 1) + '</span>';
+      html += '<div style="flex:1;min-width:0;">';
+      html += '<a href="' + r.link + '" target="_blank" style="color:#333;text-decoration:none;font-size:14px;font-weight:500;line-height:1.5;display:block;">' + escapeHtml(r.title) + '</a>';
+      if (r.desc) {
+        html += '<div style="font-size:12px;color:#888;margin-top:3px;line-height:1.4;">' + escapeHtml(r.desc) + '</div>';
+      }
+      html += '<div style="margin-top:4px;display:flex;gap:8px;align-items:center;">';
+      html += '<span style="font-size:11px;color:#43A047;background:#E8F5E9;padding:1px 6px;border-radius:8px;">' + r.source + '</span>';
+      if (r.hot) {
+        html += '<span style="font-size:11px;color:#ff6b6b;">🔥 ' + escapeHtml(r.hot) + '</span>';
+      }
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
       html += '</div>';
     }
-    html += '<div style="font-size:12px; color:#999; margin-top:8px;">⚠ 示例数据，待接入实时源</div>';
-    html += '</div>';
   }
-  document.getElementById("page-industry").innerHTML = html;
+
+  html += '<div style="font-size:11px;color:#bbb;margin-top:8px;text-align:right;">数据更新于 ' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) + ' · 点击标题可查看详情</div>';
+
+  el.innerHTML = html;
+
+  // 更新顶部时间
+  var timeEl = document.getElementById('industry-update-time');
+  if (timeEl) {
+    timeEl.textContent = '最后更新：' + new Date().toLocaleString('zh-CN');
+  }
+}
+
+function renderIndustryError(key, title, msg) {
+  var el = document.getElementById('industry-' + key);
+  if (!el) return;
+  el.innerHTML = '<h3>' + title + '</h3><div style="text-align:center;padding:20px;color:#999;font-size:13px;">' + msg + '</div>';
 }
 
 // ===================== SUCCESS DIARY =====================
