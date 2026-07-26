@@ -643,6 +643,40 @@ var industryData = {
   }
 };
 
+// ===================== 热门播客数据 =====================
+var podcastList = [
+  {title:"忽左忽右", desc:"文化沙龙类播客，话题涵盖历史、社会、文化，深度对话各界嘉宾。"},
+  {title:"随机波动", desc:"三位女性媒体人主持，关注性别、文化和社会议题。"},
+  {title:"声东击西", desc:"驻美记者主持，探讨科技、商业与中美文化差异。"},
+  {title:"不合时宜", desc:"三位生活在不同时区的年轻人聊社会、文化与生活。"},
+  {title:"疯投圈", desc:"聚焦创投圈，深度解析热门赛道和商业模式。"},
+  {title:"知行小酒馆", desc:"有知有行出品，聊投资理财和个人成长。"},
+  {title:"大内密谈", desc:"老牌音乐文化播客，聊音乐、电影和生活方式。"},
+  {title:"日谈公园", desc:"一档轻松有趣的脱口秀播客，聊电影、音乐、动漫。"},
+  {title:"无聊斋", desc:"单口喜剧演员刘旸主持，每期聊一个奇怪话题。"},
+  {title:"故事FM", desc:"用你的声音讲述你的故事，真实人物口述纪实。"},
+  {title:"八分", desc:"梁文道的文化评论节目，聊书、聊电影、聊时事。"},
+  {title:"硅谷101", desc:"聚焦硅谷科技圈，深度报道AI、芯片、自动驾驶等前沿话题。"},
+  {title:"东亚观察局", desc:"专注中日韩三国社会文化观察与比较。"},
+  {title:"贝望录", desc:"Bessie Lee主持，聊品牌营销和商业策略。"},
+  {title:"谐星聊天会", desc:"喜剧演员们一起聊天，话题轻松有趣。"},
+  {title:"博物志", desc:"关于博物馆、展览和文化遗产的播客。"},
+  {title:"海马星球", desc:"探讨女性主义话题，关注女性力量与自我成长。"},
+  {title:"得意忘形", desc:"张潇雨的个人播客，聊自我认知和人生哲学。"},
+  {title:"翻转电台", desc:"哲学类播客，用哲学视角解读当代生活。"},
+  {title:"梁文道·八分", desc:"文化评论，深度解读社会热点和书籍。"},
+  {title:"文化有限", desc:"三个媒体人聊文化现象，轻松有料。"},
+  {title:"跳岛FM", desc:"文学主题播客，聊小说、诗歌和写作。"},
+  {title:"来都来了", desc:"两个都市女性的生活分享，聊职场、感情和成长。"},
+  {title:"限时肤浅", desc:"两个朋友之间的深度对话，话题随性但走心。"},
+  {title:"黑水公园", desc:"聊恐怖电影、悬疑小说和都市传说。"},
+  {title:"迟早更新", desc:"科技、商业和文化的跨界观察。"},
+  {title:"商业就是这样", desc:"第一财经出品，解读商业现象背后的逻辑。"},
+  {title:"泡腾VC", desc:"风险投资人的行业观察和创投趋势分析。"},
+  {title:"屠龙之术", desc:"聊个人成长、职场进阶和思维方式。"},
+  {title:"Steve说", desc:"心理学播客，聊情感、关系和自我成长。"}
+];
+
 var navModules = [
   {id:"home", icon:"🏠", label:"主页"},
   {id:"news", icon:"📰", label:"新闻推送"},
@@ -824,7 +858,8 @@ function loadNews() {
     {name:"抖音热榜", url:"https://60s.viki.moe/v2/douyin?encoding=json", icon:"🎵"},
     {name:"今日头条", url:"https://60s.viki.moe/v2/toutiao?encoding=json", icon:"📰"},
     {name:"知乎热榜", url:"https://60s.viki.moe/v2/zhihu?encoding=json", icon:"💡"},
-    {name:"豆瓣讨论", url:"https://60s.viki.moe/v2/douban?encoding=json", icon:"🎬"}
+    {name:"豆瓣讨论", url:"https://60s.viki.moe/v2/douban?encoding=json", icon:"🎬"},
+    {name:"CCTV十大热门", url:"https://60s.viki.moe/v2/baidu/realtime?encoding=json", icon:"📺"}
   ];
 
   var results = {};
@@ -854,7 +889,7 @@ function loadNews() {
 }
 function renderNewsResults(results) {
   var html = "";
-  var order = ["抖音热榜","今日头条","知乎热榜","豆瓣讨论"];
+  var order = ["抖音热榜","今日头条","知乎热榜","豆瓣讨论","CCTV十大热门"];
   for (var i=0; i<order.length; i++) {
     var name = order[i];
     var r = results[name];
@@ -938,6 +973,18 @@ function renderStudy() {
     html += '</div>';
   }
   html += '</div></div>';
+
+  // 热门播客
+  var podcasts = shuffle(podcastList).slice(0,10);
+  html += '<div class="card"><div class="card-title">🎧 今日热门播客（10档）</div>';
+  for (var i=0; i<podcasts.length; i++) {
+    html += '<div class="ielts-sentence">';
+    html += '<div class="en">'+(i+1)+'. '+podcasts[i].title+'</div>';
+    html += '<div class="zh">'+podcasts[i].desc+'</div>';
+    html += '</div>';
+  }
+  html += '<p style="font-size:11px;color:#999;margin-top:8px;">* 数据来源：苹果播客/小宇宙热门排行</p>';
+  html += '</div>';
 
   document.getElementById("page-study").innerHTML = html;
 }
