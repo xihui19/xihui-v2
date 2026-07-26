@@ -207,6 +207,15 @@ html, body {
 .ielts-word .pos { font-size:12px; color:var(--primary); font-style:italic; margin-left:6px; }
 .ielts-word .meaning { font-size:13px; color:#555; display:block; margin-top:4px; }
 
+/* Speak button */
+.speak-btn {
+  display:inline-block; background:none; border:1px solid #C8E6C9; color:#43A047;
+  font-size:12px; padding:2px 8px; border-radius:12px; cursor:pointer;
+  vertical-align:middle; margin-left:6px; transition:all 0.2s;
+}
+.speak-btn:active { background:#E8F5E9; border-color:#43A047; }
+.ielts-word:hover { background:#E8F5E9; transition:background 0.2s; }
+
 /* Industry */
 .industry-card {
   background:var(--card); border-radius:12px; padding:16px;
@@ -609,6 +618,82 @@ var ieltsWords = [
   {word:"manipulate", meaning:"操纵，操作", pos:"v."},
   {word:"negotiate", meaning:"谈判，协商", pos:"v."}
 ];
+var dailySentences = [
+  {en:"How are you doing today?", zh:"你今天怎么样？"},
+  {en:"Nice to meet you.", zh:"很高兴认识你。"},
+  {en:"Could you please repeat that?", zh:"你能再说一遍吗？"},
+  {en:"What time is it now?", zh:"现在几点了？"},
+  {en:"I'm looking forward to it.", zh:"我很期待。"},
+  {en:"Have a nice day!", zh:"祝你有美好的一天！"},
+  {en:"Let me think about it.", zh:"让我想想。"},
+  {en:"That sounds great.", zh:"听起来不错。"},
+  {en:"I really appreciate your help.", zh:"非常感谢你的帮助。"},
+  {en:"Where is the nearest subway station?", zh:"最近的地铁站在哪里？"},
+  {en:"Can I get a coffee, please?", zh:"请给我一杯咖啡。"},
+  {en:"What do you do for a living?", zh:"你是做什么工作的？"},
+  {en:"I'll be there in five minutes.", zh:"我五分钟后到。"},
+  {en:"Could you speak more slowly?", zh:"你能说慢一点吗？"},
+  {en:"It's on the tip of my tongue.", zh:"话到嘴边了却想不起来。"},
+  {en:"Don't worry about it.", zh:"别担心。"},
+  {en:"Long time no see!", zh:"好久不见！"},
+  {en:"What's your plan for the weekend?", zh:"你周末有什么计划？"},
+  {en:"I'm not sure about that.", zh:"我不太确定。"},
+  {en:"Take your time.", zh:"慢慢来，不急。"},
+  {en:"That makes sense.", zh:"有道理。"},
+  {en:"Would you like something to drink?", zh:"你想喝点什么吗？"},
+  {en:"I overslept this morning.", zh:"我今天早上睡过头了。"},
+  {en:"Let's grab a bite to eat.", zh:"我们去吃点东西吧。"},
+  {en:"It's none of your business.", zh:"这不关你的事。"},
+  {en:"I'll call you back later.", zh:"我稍后给你回电话。"},
+  {en:"Better late than never.", zh:"迟做总比不做好。"},
+  {en:"Keep up the good work!", zh:"继续保持好表现！"},
+  {en:"Could you do me a favor?", zh:"你能帮我一个忙吗？"},
+  {en:"Practice makes perfect.", zh:"熟能生巧。"}
+];
+
+var dailyWords = [
+  {word:"greeting", meaning:"问候", pos:"n."},
+  {word:"appointment", meaning:"约会，预约", pos:"n."},
+  {word:"schedule", meaning:"日程安排", pos:"n./v."},
+  {word:"apologize", meaning:"道歉", pos:"v."},
+  {word:"suggestion", meaning:"建议", pos:"n."},
+  {word:"available", meaning:"有空的，可用的", pos:"adj."},
+  {word:"convenient", meaning:"方便的", pos:"adj."},
+  {word:"recommend", meaning:"推荐", pos:"v."},
+  {word:"confirm", meaning:"确认", pos:"v."},
+  {word:"reservation", meaning:"预订", pos:"n."},
+  {word:"delicious", meaning:"美味的", pos:"adj."},
+  {word:"reasonable", meaning:"合理的", pos:"adj."},
+  {word:"opinion", meaning:"意见，看法", pos:"n."},
+  {word:"prefer", meaning:"更喜欢", pos:"v."},
+  {word:"arrange", meaning:"安排", pos:"v."},
+  {word:"describe", meaning:"描述", pos:"v."},
+  {word:"impression", meaning:"印象", pos:"n."},
+  {word:"relax", meaning:"放松", pos:"v."},
+  {word:"complaint", meaning:"投诉，抱怨", pos:"n."},
+  {word:"urgent", meaning:"紧急的", pos:"adj."},
+  {word:"participate", meaning:"参加", pos:"v."},
+  {word:"organize", meaning:"组织", pos:"v."},
+  {word:"consider", meaning:"考虑", pos:"v."},
+  {word:"familiar", meaning:"熟悉的", pos:"adj."},
+  {word:"opportunity", meaning:"机会", pos:"n."},
+  {word:"request", meaning:"请求", pos:"n./v."},
+  {word:"provide", meaning:"提供", pos:"v."},
+  {word:"receive", meaning:"收到", pos:"v."},
+  {word:"deliver", meaning:"递送，交付", pos:"v."},
+  {word:"cancel", meaning:"取消", pos:"v."},
+  {word:"purchase", meaning:"购买", pos:"n./v."},
+  {word:"guarantee", meaning:"保证", pos:"n./v."},
+  {word:"frequently", meaning:"经常地", pos:"adv."},
+  {word:"immediately", meaning:"立即", pos:"adv."},
+  {word:"absolutely", meaning:"绝对地", pos:"adv."},
+  {word:"approximately", meaning:"大约", pos:"adv."},
+  {word:"probably", meaning:"大概，很可能", pos:"adv."},
+  {word:"unfortunately", meaning:"不幸地", pos:"adv."},
+  {word:"definitely", meaning:"肯定地", pos:"adv."},
+  {word:"gradually", meaning:"逐渐地", pos:"adv."}
+];
+
 
 var industryData = {
   medical: {
@@ -947,34 +1032,81 @@ function renderTodo() {
 }
 
 // ===================== STUDY =====================
-function renderStudy() {
-  var sentences = shuffle(ieltsSentences).slice(0,10);
-  var words = shuffle(ieltsWords).slice(0,10);
+// ===================== STUDY =====================
+// 全局语音函数
+function speakText(text, btn) {
+  window.speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = 0.85;
+  if (btn) {
+    btn.style.color = '#2E7D32';
+    btn.textContent = '🔊 播放中...';
+    u.onend = function() { btn.style.color = '#43A047'; btn.textContent = '🔊 听发音'; };
+    u.onerror = function() { btn.style.color = '#43A047'; btn.textContent = '🔊 听发音'; };
+  }
+  window.speechSynthesis.speak(u);
+}
 
-  var html = '<div class="card"><div class="card-title">📚 雅思英语学习打卡</div>';
-  html += '<p style="font-size:13px; color:#666;">每次加载随机推送10句句型 + 10个核心单词，刷新页面可换新。</p>';
+function renderStudy() {
+  var ieltsSent = shuffle(ieltsSentences).slice(0,10);
+  var ieltsWrd = shuffle(ieltsWords).slice(0,10);
+  var dailySent = shuffle(dailySentences).slice(0,10);
+  var dailyWrd = shuffle(dailyWords).slice(0,10);
+
+  var html = '<div class="card" style="text-align:center;padding:12px 16px;">';
+  html += '<div style="font-size:13px;color:#666;">📚 每日学习打卡 · 每次加载随机推送，刷新页面可换新</div>';
   html += '</div>';
 
-  html += '<div class="card"><div class="card-title">✏️ 雅思常用句型（10句）</div>';
-  for (var i=0; i<sentences.length; i++) {
+  // ====== 雅思句型 ======
+  html += '<div class="card"><div class="card-title">✏️ 雅思常用句型（10句）<span style="font-weight:normal;font-size:12px;color:#999;margin-left:8px;">点击 🔊 听读音</span></div>';
+  for (var i=0; i<ieltsSent.length; i++) {
+    var sid = 'is_'+i;
     html += '<div class="ielts-sentence">';
-    html += '<div class="en">'+(i+1)+'. '+sentences[i].en+'</div>';
-    html += '<div class="zh">'+sentences[i].zh+'</div>';
+    html += '<div class="en">'+(i+1)+'. '+escapeHtml(ieltsSent[i].en)+' <button class="speak-btn" onclick="speakText(''+escapeHtml(ieltsSent[i].en.replace(/'/g,"\'"))+'',this)" id="'+sid+'" title="听发音">🔊 听发音</button></div>';
+    html += '<div class="zh">'+escapeHtml(ieltsSent[i].zh)+'</div>';
     html += '</div>';
   }
   html += '</div>';
 
-  html += '<div class="card"><div class="card-title">📝 雅思核心单词（10个）</div>';
+  // ====== 雅思单词 ======
+  html += '<div class="card"><div class="card-title">📝 雅思核心单词（10个）<span style="font-weight:normal;font-size:12px;color:#999;margin-left:8px;">点击单词听读音</span></div>';
   html += '<div style="display:flex; flex-wrap:wrap;">';
-  for (var i=0; i<words.length; i++) {
-    html += '<div class="ielts-word">';
-    html += '<span class="word">'+words[i].word+'</span><span class="pos">'+words[i].pos+'</span>';
-    html += '<span class="meaning">'+words[i].meaning+'</span>';
+  for (var i=0; i<ieltsWrd.length; i++) {
+    var wid = 'iw_'+i;
+    html += '<div class="ielts-word" style="cursor:pointer;position:relative;" onclick="speakText(''+escapeHtml(ieltsWrd[i].word.replace(/'/g,"\'"))+'',document.getElementById(''+wid+''))">';
+    html += '<span class="word" style="color:#43A047;">'+escapeHtml(ieltsWrd[i].word)+'</span><span class="pos">'+escapeHtml(ieltsWrd[i].pos)+'</span>';
+    html += '<span class="meaning">'+escapeHtml(ieltsWrd[i].meaning)+'</span>';
+    html += '<span id="'+wid+'" style="position:absolute;top:4px;right:8px;font-size:14px;color:#43A047;pointer-events:none;">🔊</span>';
     html += '</div>';
   }
   html += '</div></div>';
 
-  // 热门播客
+  // ====== 日常英语句型 ======
+  html += '<div class="card"><div class="card-title">💬 日常英语口语（10句）<span style="font-weight:normal;font-size:12px;color:#999;margin-left:8px;">点击 🔊 听读音</span></div>';
+  for (var i=0; i<dailySent.length; i++) {
+    var did = 'ds_'+i;
+    html += '<div class="ielts-sentence">';
+    html += '<div class="en">'+(i+1)+'. '+escapeHtml(dailySent[i].en)+' <button class="speak-btn" onclick="speakText(''+escapeHtml(dailySent[i].en.replace(/'/g,"\'"))+'',this)" id="'+did+'" title="听发音">🔊 听发音</button></div>';
+    html += '<div class="zh">'+escapeHtml(dailySent[i].zh)+'</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // ====== 日常英语单词 ======
+  html += '<div class="card"><div class="card-title">🗣️ 日常英语单词（10个）<span style="font-weight:normal;font-size:12px;color:#999;margin-left:8px;">点击单词听读音</span></div>';
+  html += '<div style="display:flex; flex-wrap:wrap;">';
+  for (var i=0; i<dailyWrd.length; i++) {
+    var dwid = 'dw_'+i;
+    html += '<div class="ielts-word" style="cursor:pointer;position:relative;" onclick="speakText(''+escapeHtml(dailyWrd[i].word.replace(/'/g,"\'"))+'',document.getElementById(''+dwid+''))">';
+    html += '<span class="word" style="color:#43A047;">'+escapeHtml(dailyWrd[i].word)+'</span><span class="pos">'+escapeHtml(dailyWrd[i].pos)+'</span>';
+    html += '<span class="meaning">'+escapeHtml(dailyWrd[i].meaning)+'</span>';
+    html += '<span id="'+dwid+'" style="position:absolute;top:4px;right:8px;font-size:14px;color:#43A047;pointer-events:none;">🔊</span>';
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  // ====== 热门播客 ======
   var podcasts = shuffle(podcastList).slice(0,10);
   html += '<div class="card"><div class="card-title">🎧 今日热门播客（10档）</div>';
   for (var i=0; i<podcasts.length; i++) {
@@ -982,8 +1114,8 @@ function renderStudy() {
     var xyzLink = 'https://www.xiaoyuzhoufm.com/search?q='+q;
     var appleLink = 'https://podcasts.apple.com/search?term='+q;
     html += '<div class="ielts-sentence">';
-    html += '<div class="en"><a href="'+xyzLink+'" target="_blank" style="color:#43A047;text-decoration:none;">🎧 '+(i+1)+'. '+podcasts[i].title+'</a></div>';
-    html += '<div class="zh">'+podcasts[i].desc+'</div>';
+    html += '<div class="en"><a href="'+xyzLink+'" target="_blank" style="color:#43A047;text-decoration:none;">🎧 '+(i+1)+'. '+escapeHtml(podcasts[i].title)+'</a></div>';
+    html += '<div class="zh">'+escapeHtml(podcasts[i].desc)+'</div>';
     html += '<div style="margin-top:4px;display:flex;gap:6px;">';
     html += '<a href="'+xyzLink+'" target="_blank" style="font-size:11px;color:#43A047;text-decoration:none;background:#E8F5E9;padding:2px 8px;border-radius:10px;">▶ 小宇宙收听</a>';
     html += '<a href="'+appleLink+'" target="_blank" style="font-size:11px;color:#666;text-decoration:none;background:#f5f5f5;padding:2px 8px;border-radius:10px;">Apple播客</a>';
