@@ -3,11 +3,23 @@
   "short_name": "希慧",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#E0F2F1",
-  "theme_color": "#00897B",
+  "background_color": "#E8F5E9",
+  "theme_color": "#43A047",
   "icons": [
-    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
-    {"src": "icons/icon-256.png", "sizes": "256x256", "type": "image/png"},
-    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"}
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
